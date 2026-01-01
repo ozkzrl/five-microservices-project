@@ -16,4 +16,4 @@ services:
     build: ./services/gateway-service
     container_name: gateway-service
     ports:
-      - "80:80"
+      - "80:5000"
