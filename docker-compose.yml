@@ -1,0 +1,19 @@
+
+services:
+  user-service:
+    build: ./services/user-service
+    container_name: user-service
+
+  product-service:
+    build: ./services/product-service
+    container_name: product-service
+
+  order-service:
+    build: ./services/order-service
+    container_name: order-service
+
+  gateway-service:
+    build: ./services/gateway-service
+    container_name: gateway-service
+    ports:
+      - "8080:5000"
