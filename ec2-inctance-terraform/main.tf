@@ -47,16 +47,16 @@ resource "aws_instance" "base_ec2" {
 
   user_data = <<-EOF
     #!/bin/bash
-    sudo dnf update -y
+    sudo  yum update -y
     sudo hostnamectl set-hostname five-microservis-dev-server
-    sudo dnf install docker -y
+    sudo yum install docker -y
     sudo systemctl start docker
     sudo systemctl enable docker
     sudo usermod -a -G docker ec2-user
     sudo curl -SL https://github.com/docker/compose/releases/download/v2.39.2/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
     sudo chmod +x /usr/local/bin/docker-compose
-    sudo dnf install git -y
-    sudo dnf install java-11-amazon-corretto -y
+    sudo yum install git -y
+    sudo yum install java-11-amazon-corretto -y
     newgrp docker
   EOF
 
