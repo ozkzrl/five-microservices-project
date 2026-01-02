@@ -7,13 +7,52 @@ terraform {
   }
 }
 
+########################
+# VARIABLES
+########################
+variable "aws_region" {
+  description = "AWS region"
+  type        = string
+  default     = "us-east-1"
+}
+
+variable "key_name" {
+  description = "Existing EC2 Key Pair name"
+  type        = string
+}
+
+########################
+# PROVIDER
+########################
 provider "aws" {
   region = var.aws_region
 }
 
-# Security Group
+########################
+# UBUNTU 22.04 AMI
+########################
+data "aws_ami" "ubuntu" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  owners = ["099720109477"] # Canonical
+}
+
+########################
+# SECURITY GROUP
+########################
 resource "aws_security_group" "base_sg" {
-  name = "base-instance-sg"
+  name        = "base-instance-sg"
+  description = "Allow SSH and HTTP"
 
   ingress {
     from_port   = 22
@@ -37,9 +76,11 @@ resource "aws_security_group" "base_sg" {
   }
 }
 
-# EC2 Instance
+########################
+# EC2 INSTANCE
+########################
 resource "aws_instance" "base_ec2" {
-  ami           = var.ami_id
+  ami           = data.aws_ami.ubuntu.id
   instance_type = "t3.small"
   key_name      = var.key_name
 
@@ -47,24 +88,33 @@ resource "aws_instance" "base_ec2" {
 
   user_data = <<-EOF
     #!/bin/bash
-    sudo  yum update -y
-    sudo hostnamectl set-hostname five-microservis-dev-server
-    sudo yum install docker -y
-    sudo systemctl start docker
-    sudo systemctl enable docker
-    sudo usermod -a -G docker ec2-user
-    sudo curl -SL https://github.com/docker/compose/releases/download/v2.39.2/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
-    sudo chmod +x /usr/local/bin/docker-compose
-    sudo yum install git -y
-    sudo yum install java-11-amazon-corretto -y
-    newgrp docker
+    apt-get update -y
+    apt-get upgrade -y
+
+    hostnamectl set-hostname five-microservis-dev-server
+
+    apt-get install -y \
+      ca-certificates \
+      curl \
+      gnupg \
+      git \
+      openjdk-11-jdk
+
+    curl -fsSL https://get.docker.com | sh
+    systemctl enable --now docker
+
+    usermod -aG docker ubuntu
   EOF
 
   tags = {
-    Name = "base-microservice-instance"
+    Name = "ubuntu-microservice-instance"
   }
 }
 
+########################
+# OUTPUT
+########################
 output "public_ip" {
-  value = aws_instance.base_ec2.public_ip
+  description = "Public IP of the EC2 instance"
+  value       = aws_instance.base_ec2.public_ip
 }
