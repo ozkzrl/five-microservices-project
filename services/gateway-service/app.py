@@ -13,7 +13,7 @@ def products():
 
 @app.route("/health")
 def health():
-    return {"status": "gateway ok"}
+    return {"status": "gotürüvereceksen gotürü ver"}
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
